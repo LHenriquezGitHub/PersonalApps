@@ -51,9 +51,12 @@
   <ItemGroup>
     <Compile Include="Exercises\BasicForBeginners.cs" />
     <Compile Include="Exercises\ImageOrientation.cs" />
+    <Compile Include="Exercises\Intermediate\Intermediate.cs" />
+    <Compile Include="Exercises\Intermediate\IWorkflow.cs" />
     <Compile Include="ProcessFiles.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Stack.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

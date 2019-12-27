@@ -4,9 +4,9 @@ namespace Console.UI
 {
     using Microsoft.WindowsAPICodePack.Shell;
     using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
     public class ProcessFiles
     {
         public void MoveMovies(string srcPath, string destFilePath, int fileBatch, string[] videoExtentions, SearchOption searchOption)
@@ -14,13 +14,14 @@ using System.Linq;
             try
             {
                 MoveFiles(srcPath, destFilePath, fileBatch, searchOption, videoExtentions);
-                foreach (string d in Directory.GetDirectories(srcPath))
+                foreach (string dir in Directory.GetDirectories(srcPath))
                 {
+
                     //foreach (string f in Directory.GetFiles(d))
                     //{
                     //    MoveFiles(f, destFilePath, fileBatch, searchOption, videoExtentions);
                     //}
-                    MoveFiles(d, destFilePath, fileBatch, searchOption, videoExtentions);
+                    MoveFiles(dir, destFilePath, fileBatch, searchOption, videoExtentions);
                 }
             }
             catch (Exception excpt)
@@ -114,5 +115,11 @@ using System.Linq;
             }
         }
 
+    }
+
+    public enum FileType
+        {
+        Photos,
+        Videos
     }
 }
