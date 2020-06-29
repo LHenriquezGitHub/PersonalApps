@@ -16,11 +16,6 @@ namespace Console.UI
                 MoveFiles(srcPath, destFilePath, fileBatch, searchOption, videoExtentions);
                 foreach (string dir in Directory.GetDirectories(srcPath))
                 {
-
-                    //foreach (string f in Directory.GetFiles(d))
-                    //{
-                    //    MoveFiles(f, destFilePath, fileBatch, searchOption, videoExtentions);
-                    //}
                     MoveFiles(dir, destFilePath, fileBatch, searchOption, videoExtentions);
                 }
             }
@@ -28,21 +23,11 @@ namespace Console.UI
             {
                 Console.WriteLine(excpt.Message);
             }
-
         }
-        public void MoveFiles(string srcPath, string destFilePath, int fileBatch, SearchOption searchOption, string[] fileExt = null)
-        {
-            DirectoryInfo srcDirectory = new DirectoryInfo(srcPath);
-            List<FileInfo> files;
-            if (fileExt == null)
-            {
-                files = srcDirectory.GetFiles($"*.*", searchOption).ToList();
-            }
-            else
-            {
-                files = srcDirectory.GetFiles($"*.*", searchOption).Where(fl => fileExt.Any(ext => fl.Name.ToLower().EndsWith(ext.ToLower()))).ToList();
-            }
 
+        public void MoveFiles(string srcPath, string destFilePath, int fileBatch, SearchOption searchOption, string[] fileExt = null, bool removeDatePart = false)
+        {
+            var files = GetFiles(srcPath, searchOption, fileExt);
             var batchFiles = files.Take(fileBatch).ToList();
             foreach (FileInfo fileInfo in batchFiles)
             {
@@ -53,7 +38,7 @@ namespace Console.UI
 
                 var date = ShellFile.FromFilePath(fileInfo.FullName).Properties.System.ItemDate.Value.Value;
                 var datePart = (date.Month.ToString().Length == 1) ? "0" + date.Month.ToString() : date.Month.ToString();
-                var datePath =
+                var datePath = removeDatePart ? $"" :
                     $"{date.Year.ToString()}\\" +
                     $"{date.Year.ToString() + datePart}\\";
 
@@ -86,6 +71,17 @@ namespace Console.UI
                                 Console.WriteLine($"File NOT moved from: {src} to {destFilePath}{datePath}{fileName}_Duplicate.{localFileExt}");
                             }
                         }
+                        else
+                        {
+                            var counter = 1;
+                            while (File.Exists($"{destFilePath}{datePath}{fileName}_{counter}.{localFileExt}"))
+                            {
+                                counter++;
+                            }
+
+                            File.Move(src, $"{destFilePath}{datePath}{fileName}_{counter}.{localFileExt}");
+                            Console.WriteLine($"File moved from: {src} to {destFilePath}{datePath}{fileName}_{counter}.{localFileExt}");
+                        }
                     }
                     else
                     {
@@ -94,6 +90,23 @@ namespace Console.UI
                 }
             }
         }
+
+        public static List<FileInfo> GetFiles(string srcPath, SearchOption searchOption, string[] fileExt)
+        {
+            DirectoryInfo srcDirectory = new DirectoryInfo(srcPath);
+            List<FileInfo> files;
+            if (fileExt == null)
+            {
+                files = srcDirectory.GetFiles($"*.*", searchOption).ToList();
+            }
+            else
+            {
+                files = srcDirectory.GetFiles($"*.*", searchOption).Where(fl => fileExt.Any(ext => fl.Name.ToLower().EndsWith(ext.ToLower()))).ToList();
+            }
+
+            return files;
+        }
+
         public void DirectorySearch(string dir, string destFilePath, int fileBatch, string[] videoExtentions, SearchOption searchOption)
         {
             try
@@ -115,11 +128,51 @@ namespace Console.UI
             }
         }
 
+        public static void RemoveEmptyDirectories(string startDir)
+        {
+            foreach (var directory in Directory.GetDirectories(startDir))
+            {
+                RemoveEmptyDirectories(directory);
+                if (Directory.GetFiles(directory).Length == 0 && Directory.GetDirectories(directory).Length == 0)
+                {
+                    Directory.Delete(directory, false);
+                    Console.WriteLine($"Folder deleted: {directory}");
+                }
+            }
+        }
+
+        public static void WriteLinesToFiles(string srcPath)
+        {
+            var lines = new List<string>();
+            var files = GetFiles(srcPath, SearchOption.TopDirectoryOnly, null);
+            foreach (FileInfo fileInfo in files)
+            {
+                //string[] lines = { "First line", "Second line", "Third line" };
+                // WriteAllLines creates a file, writes a collection of strings to the file,
+                // and then closes the file.  You do NOT need to call Flush() or Close().
+                //File.WriteAllLines(@"C:\Users\Public\TestFolder\WriteLines.txt", lines);
+
+                lines.Add(fileInfo.Name);
+
+            }
+            File.WriteAllLines($"{srcPath}FileNames.txt" , lines);
+        }
+
+        public void WriteTextToFiles(string filePath, string text)
+        {
+            //string text = "A class is the most powerful data type in C#. Like a structure, " +
+            //             "a class defines the data and behavior of the data type. ";
+            // WriteAllText creates a file, writes the specified string to the file,
+            // and then closes the file.    You do NOT need to call Flush() or Close().
+            File.WriteAllText(@"C:\Users\Public\TestFolder\WriteText.txt", text);
+            File.WriteAllText(filePath, text);
+        }
     }
 
     public enum FileType
-        {
+    {
         Photos,
-        Videos
+        Videos,
+        Any
     }
 }
