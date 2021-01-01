@@ -1,15 +1,19 @@
 ﻿
 
+
 namespace Console.UI
 {
     using Microsoft.WindowsAPICodePack.Shell;
+    using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Text;
+
     public class ProcessFiles
     {
-        public void MoveMovies(string srcPath, string destFilePath, int fileBatch, string[] videoExtentions, SearchOption searchOption)
+        public void MoveMovies(string srcPath, string destFilePath, int fileBatch, IList<string> videoExtentions, SearchOption searchOption)
         {
             try
             {
@@ -25,7 +29,68 @@ namespace Console.UI
             }
         }
 
-        public void MoveFiles(string srcPath, string destFilePath, int fileBatch, SearchOption searchOption, string[] fileExt = null, bool removeDatePart = false)
+        public void MoveMusic(string srcPath, string destFilePath, int fileBatch, SearchOption searchOption, IList<string> fileExt = null, bool removeDatePart = false)
+        {
+            var files = GetFiles(srcPath, searchOption, fileExt);
+            var batchFiles = files.Take(fileBatch).ToList();
+            foreach (FileInfo fileInfo in batchFiles)
+            {
+                var srcFilePath = fileInfo.FullName;
+                var filename = srcFilePath.Split("\\".ToCharArray()).Last();
+                var localFileExt = filename.Split(".".ToCharArray()).Last();
+
+
+                if (ShellFile.FromFilePath(fileInfo.FullName).Properties.System.ItemAuthors.Value == null) continue;
+                if (ShellFile.FromFilePath(fileInfo.FullName).Properties.System.Title.Value == null) continue;
+                var artist = ShellFile.FromFilePath(fileInfo.FullName).Properties.System.ItemAuthors.Value[0];
+                var title = ShellFile.FromFilePath(fileInfo.FullName).Properties.System.Title.Value;
+
+                artist = artist.Split(';').First();
+
+                artist = artist.Replace("?",".").Replace("/", "-").Replace("\"", "").Replace("*","").Replace(",", "-").Replace(":", "-"); 
+                title = title.Replace("?", ".").Replace("/", "-").Replace("\"", "").Replace("*", "").Replace(",", "-").Replace(":", "-");
+
+                var file = $"{artist} - {title}";
+
+                var d = $"{destFilePath}{artist}";
+
+                var src = $"{srcFilePath}";
+                var dest = $"{destFilePath}{artist}\\{file}.{localFileExt}";
+
+                try
+                {
+                    if (!Directory.Exists(d)) Directory.CreateDirectory(d);
+                    File.Move(src, dest);
+                    Console.WriteLine($"File moved from: {src} to {dest}");
+                }
+                catch (Exception ex)
+                {
+                    if (ex.Message.Contains("already exists"))
+                    {
+                        var destDupDir = $"{destFilePath}Duplicate";
+                        if (!Directory.Exists(destDupDir)) Directory.CreateDirectory(destDupDir);
+                        var destDup = $"{destDupDir}\\{file}{new Random().Next(1000)}.{localFileExt}";
+                        File.Move(src, destDup);
+                        Console.WriteLine($"File moved from: {src} to {destDup}");
+                    }
+                }
+            }
+        }
+
+        public string RemoveSpecialCharacters(string str)
+        {
+            var sb = new StringBuilder();
+            foreach (char c in str)
+            {
+                if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '.' || c == '_' || c == ' ')
+                {
+                    sb.Append(c);
+                }
+            }
+            return sb.ToString();
+        }
+
+        public void MoveFiles(string srcPath, string destFilePath, int fileBatch, SearchOption searchOption, IList<string> fileExt = null, bool removeDatePart = false)
         {
             var files = GetFiles(srcPath, searchOption, fileExt);
             var batchFiles = files.Take(fileBatch).ToList();
@@ -37,10 +102,21 @@ namespace Console.UI
                 var localFileExt = file.Split(".".ToCharArray()).Last();
 
                 var date = ShellFile.FromFilePath(fileInfo.FullName).Properties.System.ItemDate.Value.Value;
+
+
+                var ddd = new DateTime?(date.AddYears(10));
+
+                var shellFile = ShellFile.FromFilePath(fileInfo.FullName);
+
+                var propertyWriter  = shellFile.Properties.GetPropertyWriter();
+                propertyWriter.WriteProperty(SystemProperties.System.ItemDate, ddd);
+                propertyWriter.Close();
+
+                shellFile.Properties.System.ItemDate.Value = ddd;
+
+
                 var datePart = (date.Month.ToString().Length == 1) ? "0" + date.Month.ToString() : date.Month.ToString();
-                var datePath = removeDatePart ? $"" :
-                    $"{date.Year.ToString()}\\" +
-                    $"{date.Year.ToString() + datePart}\\";
+                var datePath = removeDatePart ? $"" : $"{date.Year}\\" + $"{date.Year.ToString() + datePart}\\";
 
                 var s = $"{destFilePath}{datePath}";
                 var d = $"{destFilePath}{datePath}";
@@ -91,7 +167,7 @@ namespace Console.UI
             }
         }
 
-        public static List<FileInfo> GetFiles(string srcPath, SearchOption searchOption, string[] fileExt)
+        public static List<FileInfo> GetFiles(string srcPath, SearchOption searchOption, IList<string> fileExt)
         {
             DirectoryInfo srcDirectory = new DirectoryInfo(srcPath);
             List<FileInfo> files;
@@ -107,7 +183,7 @@ namespace Console.UI
             return files;
         }
 
-        public void DirectorySearch(string dir, string destFilePath, int fileBatch, string[] videoExtentions, SearchOption searchOption)
+        public void DirectorySearch(string dir, string destFilePath, int fileBatch, IList<string> videoExtentions, SearchOption searchOption)
         {
             try
             {
@@ -128,11 +204,23 @@ namespace Console.UI
             }
         }
 
-        public static void RemoveEmptyDirectories(string startDir)
+        public static void RemoveEmptyDirectories(string startDir, bool removeHiddenFiles = true)
         {
             foreach (var directory in Directory.GetDirectories(startDir))
             {
                 RemoveEmptyDirectories(directory);
+
+                var files = GetFiles(directory, SearchOption.AllDirectories, null);
+                var hasOnlyHiddenFile = files.All(f => f.Attributes.HasFlag(FileAttributes.Hidden));
+
+                if (removeHiddenFiles && hasOnlyHiddenFile)
+                {
+                    foreach (var file in files)
+                    {
+                        File.Delete(file.FullName);                        
+                    }
+                }
+
                 if (Directory.GetFiles(directory).Length == 0 && Directory.GetDirectories(directory).Length == 0)
                 {
                     Directory.Delete(directory, false);
@@ -143,22 +231,74 @@ namespace Console.UI
 
         public static void WriteLinesToFiles(string srcPath)
         {
-            var lines = new List<string>();
-            var files = GetFiles(srcPath, SearchOption.TopDirectoryOnly, null);
-            foreach (FileInfo fileInfo in files)
-            {
-                //string[] lines = { "First line", "Second line", "Third line" };
-                // WriteAllLines creates a file, writes a collection of strings to the file,
-                // and then closes the file.  You do NOT need to call Flush() or Close().
-                //File.WriteAllLines(@"C:\Users\Public\TestFolder\WriteLines.txt", lines);
+            if (File.Exists($"{srcPath}\\FileNames.csv")) File.Delete($"{srcPath}\\FileNames.csv");
 
-                lines.Add(fileInfo.Name);
+            var lines = new List<string>();
+            var files = GetFiles(srcPath, SearchOption.AllDirectories, null);
+            lines.Add($"Artist,Title,Filename,Ext.,FullName");
+            
+            //lines.Add($"Artist,Title,Filename, Duplicate");
+            //var group =
+            //    (from fl in files
+            //     select new DummyClass
+            //     {
+            //         Filename = Path.GetFileName(fl.FullName),
+            //         Title = Path.GetFileName(fl.FullName).Split('-')[1].Trim(),
+            //         Artist = Path.GetFileName(fl.FullName).Split('-')[0].Trim()
+            //     }).GroupBy(x => x.Artist).ToList();
+
+            //foreach (var gs in group)
+            //{
+            //    var count = 0;
+            //    foreach (var g in gs)
+            //    {
+            //        count = gs.Where(f => !f.Filename.Equals(g.Filename)).Any(local => local.Title.StartsWith(g.Title)) ? count + 1 : count;
+            //        var dup = $"Duplicate_{count}";
+            //        lines.Add($"{g.Artist},{g.Title},{g.Filename},{dup}");
+            //    }
+            //}
+
+
+            foreach (FileInfo file in files)
+            {         
+                var index = file.Name.IndexOf(" - ");
+                var artist = file.Name.Substring(0, index);
+
+                var ext = file.Name.Split('.').Last();
+                var title = file.Name.Substring(index + 3, file.Name.Length - (index + 3)).Replace($".{ext}", "");
+                var filename = file.Name.Replace(ext, "");   
+
+                lines.Add($"{artist},{title},{filename},{ext},{file.FullName}");
 
             }
-            File.WriteAllLines($"{srcPath}FileNames.txt" , lines);
+
+            File.WriteAllLines($"{srcPath}\\FileNames.csv", lines);
         }
 
-        public void WriteTextToFiles(string filePath, string text)
+        private static string MarkAsDuplicate(FileInfo file, List<FileInfo> files)
+        {
+            var index = file.Name.IndexOf(" - ");
+            var artist = file.Name.Substring(0, index);
+            var ext = file.Name.Split('.').Last();
+            var title = file.Name.Substring(index + 3, file.Name.Length - (index + 3)).Replace($".{ext}", "");
+            var filename = file.Name.Replace(ext, "");
+
+            //TODO:
+
+            var count = 0;
+            var localFiles = files.Where(f => !f.Equals(file)).Where(f => f.Name.StartsWith(artist)).ToList();
+            foreach (var localFile in localFiles)
+            {
+                var localTitle = ShellFile.FromFilePath(localFile.FullName).Properties.System.Title.Value;
+                if (title.StartsWith(localTitle)) 
+                    count++;
+            }
+
+            var dup = $"Duplicate_{count}";
+            return $"{artist},{title},{filename},{ext},{file.FullName},{dup}";
+        }
+
+        public static void WriteTextToFiles(string filePath, string text)
         {
             //string text = "A class is the most powerful data type in C#. Like a structure, " +
             //             "a class defines the data and behavior of the data type. ";
@@ -167,12 +307,29 @@ namespace Console.UI
             File.WriteAllText(@"C:\Users\Public\TestFolder\WriteText.txt", text);
             File.WriteAllText(filePath, text);
         }
+
     }
 
     public enum FileType
     {
         Photos,
         Videos,
+        Music,
         Any
+    }
+
+    public static class Constants
+    {
+        public static IList<string> PhotoExt = new string[] { "JPG", "PNG", "GIF", "WEBP", "TIFF", "TIF", "PSD", "RAW", "BMP", "HEIF", "INDD", "JPEG 2000", "SVG", "AI", "EPS", "PDF", "AAE", "HEIC", "JPEG", "NEF"};
+        public static IList<string> VideoExt = new string[] { "MP4", "AVI", "MOV", "FLV", "WMV", "MPG", "3G2", "3GP" };
+        public static IList<string> MusicExt = new string[] { "MP3", "M4P", "M4A", "WMA", "FLAC" };
+    }
+
+    public class DummyClass
+    {
+        public string Filename { get; set; }
+        public string Title { get; set; }
+
+        public string Artist { get; set; }
     }
 }

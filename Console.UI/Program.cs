@@ -11,14 +11,27 @@ namespace Console.UI
 
         public static void Main(string[] args)
         {
-            var srcPath = @"C:\Users\Leo\Desktop\WorkingFolder\Mac Photos";
-            var destFilePath = @"C:\Users\Leo\Desktop\WorkingFolder\Mac Videos Target\";
 
-            //ExecuteProcessFiles(srcPath, destFilePath, FileType.Videos);
-            //ProcessFiles.WriteLinesToFiles(srcPath);
+            /**********************************************************/
+
+            //CopyMovies.Copy(@"F:\Movies");
+            //System.Console.Read();
+
+            /**********************************************************/
+
+
+            /**********************************************************/
+
+                var srcPath = @"C:\Users\Leo\Desktop\100D5100";
+                var destFilePath = @"C:\Users\Leo\Desktop\100D5100\";
+
+            ExecuteProcessFiles(srcPath, destFilePath, FileType.Photos);
+            ProcessFiles.WriteLinesToFiles(srcPath);
+
+            /**********************************************************/
 
             //Delete Empty Folders
-            ProcessFiles.RemoveEmptyDirectories(srcPath);
+            //ProcessFiles.RemoveEmptyDirectories(srcPath);
 
             //Renaming Files
             //srcPath = @"F:\Videos\TV Shows\Blue's Clues (Complete)";
@@ -34,6 +47,10 @@ namespace Console.UI
             //{
             //    RenameFiles(srcPath, kv.Key, kv.Value);
             //}
+
+            ProcessFiles.WriteLinesToFiles(srcPath);
+
+
         }
 
         public static void RenameFiles(string srcPath, string replaceFrom, string replaceTo)
@@ -51,19 +68,24 @@ namespace Console.UI
         public static void ExecuteProcessFiles(string srcPath, string destFilePath, FileType fileType)
         {
             var pf = new ProcessFiles();
-            var fileBatch = 8500;
+            var fileBatch = 45000;// 8500;
 
             if (fileType == FileType.Photos)
             {
-                string[] extentions = new string[] { "JPG", "PNG", "GIF", "WEBP", "TIFF", "TIF", "PSD", "RAW", "BMP", "HEIF", "INDD", "JPEG 2000", "SVG", "AI", "EPS", "PDF", "AAE", "HEIC", "JPEG" };
+                var extentions = Constants.PhotoExt;
                 pf.MoveFiles(srcPath, destFilePath, fileBatch, SearchOption.AllDirectories, extentions);
             }
 
             else if (fileType == FileType.Videos)
             {
-                string[] extentions = new string[] { "MP4", "AVI", "MOV", "FLV", "WMV", "MPG", "3G2", "3GP" };
+               var extentions = Constants.VideoExt;
                 pf.DirectorySearch(srcPath, destFilePath, fileBatch, extentions, SearchOption.TopDirectoryOnly);
                 pf.MoveMovies(srcPath, destFilePath, fileBatch, extentions, SearchOption.TopDirectoryOnly);
+            }
+            else if (fileType == FileType.Music)
+            {
+                var extentions = Constants.MusicExt;
+                pf.MoveMusic(srcPath, destFilePath, fileBatch, SearchOption.AllDirectories, extentions);
             }
             else if (fileType == FileType.Any)
             {
