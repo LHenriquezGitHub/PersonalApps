@@ -1,33 +1,31 @@
-﻿
-
-namespace Console.UI
+﻿namespace Console.UI
 {
-    using Microsoft.Office.Interop.Excel;
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Windows.Documents;
+    using System.Text;
 
     public static class CopyMovies
     {
 
-        public static string Copy(string destDirLetter)
-        {
-            var returnMsg = string.Empty;
-            var srcFilenameCollection = GetFilenameCollectionToCopy();
+        public static string Copy(string targetPathLetter, string destDirLetter, string fileMoviesList)
+        {            
+            var srcFilenameCollection = GetFilenameCollectionToCopy(fileMoviesList);
+            var sb = new StringBuilder();
 
             try
             {
                 // Copy text files.
                 foreach (var srcFilename in srcFilenameCollection)
                 {
-                    var dstFilename = srcFilename.Replace(@"G:\Videos\Movies\Movies Kids", destDirLetter);
+                    var dstFilename = srcFilename.Replace(targetPathLetter, destDirLetter);
                     try
                     {
                         var dstFileExists = File.Exists(dstFilename);
                         if (dstFileExists)
                         {
-                            Console.WriteLine($"File Already Exists, NOT Copy From: {GetShortFilename(srcFilename)} To: {GetShortFilename(dstFilename)}");
+                            var line3 = $"* File Already Exists, NOT Copy From: {GetShortFilename(srcFilename)} To: {GetShortFilename(dstFilename)}";
+                            Console.WriteLine(line3); sb.AppendLine(line3);
                         }
                         else
                         {
@@ -35,20 +33,23 @@ namespace Console.UI
 
                             // Will not overwrite if the destination file already exists.
 
-                            Console.WriteLine($"File Copying From: {GetShortFilename(srcFilename)} To: {GetShortFilename(dstFilename)}...");
+                            var line1 = $"* File Copying From: {GetShortFilename(srcFilename)} To: {GetShortFilename(dstFilename)}...";
+                            Console.WriteLine(line1); sb.AppendLine(line1);
                             File.Copy(srcFilename, dstFilename, false);
-                            Console.WriteLine($"File Copied From: {GetShortFilename(srcFilename)} To: {GetShortFilename(dstFilename)}");
+                            var line2 = $"* File Copied From: {GetShortFilename(srcFilename)} To: {GetShortFilename(dstFilename)}";
+                            Console.WriteLine(line2); sb.AppendLine(line2);
                         }
                     }
 
                     // Catch exception if the file was already copied.
                     catch (IOException copyError)
                     {
-                        returnMsg = (copyError.Message);
+                        sb.AppendLine(copyError.Message);
                     }
                 }
 
-                Console.WriteLine($"File Copy Process Completed");
+                var line = $"* File Copy Process Completed";
+                Console.WriteLine(line); sb.AppendLine(line);
 
                 // Delete source files that were copied.
                 //foreach (string f in fileToCopyList)
@@ -59,10 +60,10 @@ namespace Console.UI
 
             catch (DirectoryNotFoundException dirNotFound)
             {
-                returnMsg = (dirNotFound.Message);
+                sb.AppendLine(dirNotFound.Message);
             }
 
-            return returnMsg;
+            return sb.ToString();
         }
 
         private static string GetShortFilename(string srcFilename)
@@ -80,12 +81,11 @@ namespace Console.UI
             if (!Directory.Exists(dstDirectoryName)) Directory.CreateDirectory(dstDirectoryName);
         }
 
-        public static string[] GetFilenameCollectionToCopy()
+        public static string[] GetFilenameCollectionToCopy(string fileMoviesList)
         {
-            var filename = @"G:\Videos\Movies\Movies Kids\MovieToCopyToUsbOrSdCard.txt";
-            string[] lines = File.ReadAllLines(filename);
+            string[] lines = File.ReadAllLines(fileMoviesList);
             List<string> l = new List<string>();
-            foreach (var    line in lines)
+            foreach (var line in lines)
             {
                 var s = line;
                 if (line.StartsWith("\""))
@@ -94,7 +94,7 @@ namespace Console.UI
                 }
                 if (line.StartsWith("\""))
                 {
-                  s =  s.Substring(0,s.Length - 1);
+                    s = s.Substring(0, s.Length - 1);
                 }
 
                 l.Add(s);

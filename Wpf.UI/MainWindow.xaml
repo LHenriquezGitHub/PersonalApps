@@ -1,0 +1,33 @@
+﻿<Window x:Class="Wpf.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wpf.UI"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="720" Width="1260">
+    <Grid>
+        <TabControl x:Name="tabControl" HorizontalAlignment="Left" Height="669" Margin="25,10,0,0" VerticalAlignment="Top" Width="1200">
+            <TabItem Header="Copy Files">
+                <Grid Background="#FFE5E5E5" >
+                    <ComboBox x:Name="cbFileType" HorizontalAlignment="Left" Margin="142,10,0,0" VerticalAlignment="Top" Width="200" SelectionChanged="cbFileType_SelectionChanged"/>
+                    <Label x:Name="label" Content="File Type:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="82"/>
+                    <Label x:Name="lblSrcPath" Content="Source Folder:" HorizontalAlignment="Left" Margin="10,42,0,0" VerticalAlignment="Top"/>
+                    <Label x:Name="lblTargetPath" Content="Target Folder:" HorizontalAlignment="Left" Margin="10,74,0,0" VerticalAlignment="Top"/>
+                    <TextBox x:Name="txtSrcPath" HorizontalAlignment="Left" Height="23" Margin="142,42,0,0" TextWrapping="Wrap"  VerticalAlignment="Top" Width="400" GotFocus="txtSrcPath_GotFocus" />
+                    <TextBox x:Name="txtTargetPath" HorizontalAlignment="Left" Height="23" Margin="142,74,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="400" GotFocus="txtTargetPath_GotFocus"/>
+                    <CheckBox x:Name="chbAllDirectories" Content="All Directories" HorizontalAlignment="Left" Margin="386,12,0,0" VerticalAlignment="Top"/>
+                    <RichTextBox x:Name="rtxtMessage" VerticalScrollBarVisibility="Auto" HorizontalAlignment="Left" Height="390" VerticalAlignment="Top" Width="1113" Margin="10,205,0,0"/>
+                    <Button x:Name="btnCopy" Content="Copy" HorizontalAlignment="Left" Height="25" Margin="10,175,0,0" VerticalAlignment="Top" Width="125" Click="btnCopy_Click"/>
+                    <Label x:Name="lblFileMoviesList" Content="File Movie List:" HorizontalAlignment="Left" Margin="10,106,0,0" VerticalAlignment="Top"/>
+                    <TextBox x:Name="txtFileMoviesList" HorizontalAlignment="Left" Height="23" Margin="142,106,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="400" GotFocus="txtFileMoviesList_GotFocus"/>
+                    <TextBlock x:Name="textBlock" Margin="547,106,0,0" >
+                        <Hyperlink Click="Hyperlink_Click">
+                            <TextBlock Text="Open Movie List"/>
+                        </Hyperlink>
+                    </TextBlock>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>

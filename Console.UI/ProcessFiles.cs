@@ -1,10 +1,6 @@
-﻿
-
-
-namespace Console.UI
+﻿namespace Console.UI
 {
     using Microsoft.WindowsAPICodePack.Shell;
-    using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -47,7 +43,7 @@ namespace Console.UI
 
                 artist = artist.Split(';').First();
 
-                artist = artist.Replace("?",".").Replace("/", "-").Replace("\"", "").Replace("*","").Replace(",", "-").Replace(":", "-"); 
+                artist = artist.Replace("?", ".").Replace("/", "-").Replace("\"", "").Replace("*", "").Replace(",", "-").Replace(":", "-");
                 title = title.Replace("?", ".").Replace("/", "-").Replace("\"", "").Replace("*", "").Replace(",", "-").Replace(":", "-");
 
                 var file = $"{artist} - {title}";
@@ -90,8 +86,10 @@ namespace Console.UI
             return sb.ToString();
         }
 
-        public void MoveFiles(string srcPath, string destFilePath, int fileBatch, SearchOption searchOption, IList<string> fileExt = null, bool removeDatePart = false)
+        public string MoveFiles(string srcPath, string destFilePath, int fileBatch, SearchOption searchOption, IList<string> fileExt = null, bool removeDatePart = false)
         {
+            var sb = new StringBuilder();
+
             var files = GetFiles(srcPath, searchOption, fileExt);
             var batchFiles = files.Take(fileBatch).ToList();
             foreach (FileInfo fileInfo in batchFiles)
@@ -100,35 +98,25 @@ namespace Console.UI
                 var file = srcFilePath.Split("\\".ToCharArray()).Last();
                 var fileName = file.Split(".".ToCharArray()).First();
                 var localFileExt = file.Split(".".ToCharArray()).Last();
-
-                var date = ShellFile.FromFilePath(fileInfo.FullName).Properties.System.ItemDate.Value.Value;
-
-
-                var ddd = new DateTime?(date.AddYears(10));
-
                 var shellFile = ShellFile.FromFilePath(fileInfo.FullName);
-
-                var propertyWriter  = shellFile.Properties.GetPropertyWriter();
-                propertyWriter.WriteProperty(SystemProperties.System.ItemDate, ddd);
-                propertyWriter.Close();
-
-                shellFile.Properties.System.ItemDate.Value = ddd;
+                var date = shellFile.Properties.System.ItemDate.Value.Value;
 
 
                 var datePart = (date.Month.ToString().Length == 1) ? "0" + date.Month.ToString() : date.Month.ToString();
                 var datePath = removeDatePart ? $"" : $"{date.Year}\\" + $"{date.Year.ToString() + datePart}\\";
 
-                var s = $"{destFilePath}{datePath}";
-                var d = $"{destFilePath}{datePath}";
+                var s = $"{destFilePath}\\{datePath}";
+                var d = $"{destFilePath}\\{datePath}";
 
                 var src = $"{srcFilePath}";
-                var dest = $"{destFilePath}{datePath}{file}";
+                var dest = $"{destFilePath}\\{datePath}{file}";
 
                 try
                 {
                     if (!Directory.Exists(s)) Directory.CreateDirectory(d);
                     File.Move(src, dest);
-                    Console.WriteLine($"File moved from: {src} to {dest}");
+                    var line = $"* File moved from: {src} to {dest}";
+                    Console.WriteLine(line); sb.AppendLine(line);
                 }
                 catch (Exception ex)
                 {
@@ -137,26 +125,29 @@ namespace Console.UI
                         if (ShellFile.FromFilePath(src).Properties.System.Size.Value.Value ==
                             ShellFile.FromFilePath(dest).Properties.System.Size.Value.Value)
                         {
-                            if (!File.Exists($"{destFilePath}{datePath}{fileName}_Duplicate.{localFileExt}"))
+                            if (!File.Exists($"{destFilePath}\\{datePath}{fileName}_Duplicate.{localFileExt}"))
                             {
-                                File.Move(src, $"{destFilePath}{datePath}{fileName}_Duplicate.{localFileExt}");
-                                Console.WriteLine($"File moved from: {src} to {destFilePath}{datePath}{fileName}_Duplicate.{localFileExt}");
+                                File.Move(src, $"{destFilePath}\\{datePath}{fileName}_Duplicate.{localFileExt}");
+                                var line = $"* File moved from: {src} to {destFilePath}\\{datePath}{fileName}_Duplicate.{localFileExt}";
+                                Console.WriteLine(line); sb.AppendLine(line);
                             }
                             else
                             {
-                                Console.WriteLine($"File NOT moved from: {src} to {destFilePath}{datePath}{fileName}_Duplicate.{localFileExt}");
+                                var line = $"* File Already Exists NOT moved from: {src} to {destFilePath}\\{datePath}{fileName}_Duplicate.{localFileExt}";
+                                Console.WriteLine(line); sb.AppendLine(line);
                             }
                         }
                         else
                         {
                             var counter = 1;
-                            while (File.Exists($"{destFilePath}{datePath}{fileName}_{counter}.{localFileExt}"))
+                            while (File.Exists($"{destFilePath}\\{datePath}{fileName}_{counter}.{localFileExt}"))
                             {
                                 counter++;
                             }
 
-                            File.Move(src, $"{destFilePath}{datePath}{fileName}_{counter}.{localFileExt}");
-                            Console.WriteLine($"File moved from: {src} to {destFilePath}{datePath}{fileName}_{counter}.{localFileExt}");
+                            File.Move(src, $"{destFilePath}\\{datePath}{fileName}_{counter}.{localFileExt}");
+                            var line = $"* File moved from: {src} to {destFilePath}\\{datePath}{fileName}_{counter}.{localFileExt}";
+                            Console.WriteLine(line); sb.AppendLine(line);
                         }
                     }
                     else
@@ -165,6 +156,8 @@ namespace Console.UI
                     }
                 }
             }
+
+            return sb.ToString();
         }
 
         public static List<FileInfo> GetFiles(string srcPath, SearchOption searchOption, IList<string> fileExt)
@@ -217,7 +210,7 @@ namespace Console.UI
                 {
                     foreach (var file in files)
                     {
-                        File.Delete(file.FullName);                        
+                        File.Delete(file.FullName);
                     }
                 }
 
@@ -236,7 +229,7 @@ namespace Console.UI
             var lines = new List<string>();
             var files = GetFiles(srcPath, SearchOption.AllDirectories, null);
             lines.Add($"Artist,Title,Filename,Ext.,FullName");
-            
+
             //lines.Add($"Artist,Title,Filename, Duplicate");
             //var group =
             //    (from fl in files
@@ -260,13 +253,13 @@ namespace Console.UI
 
 
             foreach (FileInfo file in files)
-            {         
+            {
                 var index = file.Name.IndexOf(" - ");
                 var artist = file.Name.Substring(0, index);
 
                 var ext = file.Name.Split('.').Last();
                 var title = file.Name.Substring(index + 3, file.Name.Length - (index + 3)).Replace($".{ext}", "");
-                var filename = file.Name.Replace(ext, "");   
+                var filename = file.Name.Replace(ext, "");
 
                 lines.Add($"{artist},{title},{filename},{ext},{file.FullName}");
 
@@ -290,7 +283,7 @@ namespace Console.UI
             foreach (var localFile in localFiles)
             {
                 var localTitle = ShellFile.FromFilePath(localFile.FullName).Properties.System.Title.Value;
-                if (title.StartsWith(localTitle)) 
+                if (title.StartsWith(localTitle))
                     count++;
             }
 
@@ -308,6 +301,59 @@ namespace Console.UI
             File.WriteAllText(filePath, text);
         }
 
+
+        public static void RenameFiles(string srcPath, string replaceFrom, string replaceTo)
+        {
+            var files = ProcessFiles.GetFiles(srcPath, SearchOption.AllDirectories, new string[] { "MKV" });
+            foreach (var file in files)
+            {
+                var oldfile = file.Name;
+                var newFile = (oldfile.Contains(replaceFrom)) ? oldfile.Replace(replaceFrom, replaceTo) : oldfile;
+                var newFileFull = $"{file.Directory}\\{newFile}";
+                File.Move(file.FullName, newFileFull);
+            }
+        }
+
+        public static string ExecuteProcessFiles(string srcPath, string destFilePath, FileType fileType, bool? allDirectories)
+        {
+            var searchOption = (allDirectories ?? false) ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+
+            var sb = new StringBuilder();
+            var pf = new ProcessFiles();
+            var fileBatch = 45000;// 8500;
+
+            if (fileType == FileType.Photos)
+            {
+                var extentions = Constants.PhotoExt;
+                sb.Append(pf.MoveFiles(srcPath, destFilePath, fileBatch, searchOption, extentions));
+            }
+
+            else if (fileType == FileType.Videos)
+            {
+                var extentions = Constants.VideoExt;
+                pf.DirectorySearch(srcPath, destFilePath, fileBatch, extentions, searchOption);
+                pf.MoveMovies(srcPath, destFilePath, fileBatch, extentions, searchOption);
+            }
+            else if (fileType == FileType.Music)
+            {
+                var extentions = Constants.MusicExt;
+                pf.MoveMusic(srcPath, destFilePath, fileBatch, searchOption, extentions);
+            }
+            else if (fileType == FileType.Any)
+            {
+                pf.MoveFiles(srcPath, destFilePath, fileBatch, searchOption, null, true);
+            }
+            else
+            {
+                throw new NotImplementedException($"FileType: {fileType} not defined. Defined FileType: {FileType.Photos} and {FileType.Videos}");
+            }
+
+            var line = "* Process Completed";
+            Console.WriteLine(line); sb.AppendLine(line);
+            Console.Read();
+
+            return sb.ToString();
+        }
     }
 
     public enum FileType
@@ -332,4 +378,5 @@ namespace Console.UI
 
         public string Artist { get; set; }
     }
+
 }
