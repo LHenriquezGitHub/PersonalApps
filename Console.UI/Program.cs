@@ -1,4 +1,6 @@
-﻿namespace Console.UI
+﻿using System.IO;
+
+namespace Console.UI
 {
     class Program
     {
@@ -16,12 +18,12 @@
 
             /**********************************************************/
 
-            var srcPath = @"C:\Users\Leo\Downloads\iloveimg-converted";
-            var destPath = @"C:\Users\Leo\Downloads\StagePhotos\";
+            var srcPath = @"C:\Users\Leo\Desktop\Christina";
+            var destPath = @"C:\Users\Leo\Desktop\Christina2";
+            var fileType = FileType.Videos;
 
-            
-            ProcessFiles.ExecuteProcessFiles(srcPath, destPath, FileType.Photos, true);
-            ProcessFiles.WriteLinesToFiles(srcPath);
+            //ProcessFiles.ExecuteProcessFiles(srcPath, destPath, fileType, true);
+            //ProcessFiles.WriteLinesToFiles(srcPath);
 
             /**********************************************************/
 
@@ -43,9 +45,15 @@
             //    RenameFiles(srcPath, kv.Key, kv.Value);
             //}
 
-            ProcessFiles.WriteLinesToFiles(srcPath);
+            //ProcessFiles.WriteLinesToFiles(srcPath);
+
+            ProcessFiles.RenameFiles(destPath);
+
+            ProcessFiles.WriteDetailsToFiles(destPath);
 
 
         }
+
+      
     }
 }

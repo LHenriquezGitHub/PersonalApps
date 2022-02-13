@@ -1,6 +1,7 @@
 ﻿namespace Console.UI
 {
     using Microsoft.WindowsAPICodePack.Shell;
+    using Shell32;
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -9,14 +10,14 @@
 
     public class ProcessFiles
     {
-        public void MoveMovies(string srcPath, string destFilePath, int fileBatch, IList<string> videoExtentions, SearchOption searchOption)
+        public void MoveMovies(string srcPath, string destFilePath, int fileBatch, IList<string> videoExtentions, SearchOption searchOption, string livePhotos = null)
         {
             try
             {
-                MoveFiles(srcPath, destFilePath, fileBatch, searchOption, videoExtentions);
+                MoveFiles(srcPath, destFilePath, fileBatch, searchOption, videoExtentions, livePhotos: livePhotos);
                 foreach (string dir in Directory.GetDirectories(srcPath))
                 {
-                    MoveFiles(dir, destFilePath, fileBatch, searchOption, videoExtentions);
+                    MoveFiles(dir, destFilePath, fileBatch, searchOption, videoExtentions, livePhotos: livePhotos);
                 }
             }
             catch (Exception excpt)
@@ -86,7 +87,25 @@
             return sb.ToString();
         }
 
-        public string MoveFiles(string srcPath, string destFilePath, int fileBatch, SearchOption searchOption, IList<string> fileExt = null, bool removeDatePart = false)
+        public static void RenameFiles(string destPath)
+        {
+            //Rename Files
+            var files = ProcessFiles.GetFiles(destPath, SearchOption.AllDirectories, null);
+            foreach (var file in files)
+            {
+                if (file.FullName.Contains("_Duplicate"))
+                {
+                    var removeDupStr = file.FullName.Replace("_Duplicate", "");
+                    File.Move(file.FullName, removeDupStr);
+
+                    var line = $"* File rename from: {file.FullName} to {removeDupStr}";
+                    Console.WriteLine(line);
+
+                }
+            }
+        }
+
+        public string MoveFiles(string srcPath, string destFilePath, int fileBatch, SearchOption searchOption, IList<string> fileExt = null, bool removeDatePart = false, string livePhotos = null)
         {
             var sb = new StringBuilder();
 
@@ -95,25 +114,35 @@
             foreach (FileInfo fileInfo in batchFiles)
             {
                 var srcFilePath = fileInfo.FullName;
-                var file = srcFilePath.Split("\\".ToCharArray()).Last();
-                var fileName = file.Split(".".ToCharArray()).First();
-                var localFileExt = file.Split(".".ToCharArray()).Last();
+                var fileNameWithExt = srcFilePath.Split("\\".ToCharArray()).Last();
+                var fileName = fileNameWithExt.Split(".".ToCharArray()).First();
+                var localFileExt = fileNameWithExt.Split(".".ToCharArray()).Last();
                 var shellFile = ShellFile.FromFilePath(fileInfo.FullName);
                 var date = shellFile.Properties.System.ItemDate.Value.Value;
 
+                var isLivePhoto = false;
+                if (!string.IsNullOrEmpty(livePhotos))
+                {
+                    try
+                    {   //Convert nanoseconds to milliseconds
+                        double? duration = shellFile.Properties.System.Media.Duration.Value.Value * 0.0001;
+                        isLivePhoto = duration.HasValue && duration <= 4000;
+                    }
+                    catch (Exception) { if (!isLivePhoto) isLivePhoto = fileInfo.Length < 5000000; }
+                }
 
                 var datePart = (date.Month.ToString().Length == 1) ? "0" + date.Month.ToString() : date.Month.ToString();
                 var datePath = removeDatePart ? $"" : $"{date.Year}\\" + $"{date.Year.ToString() + datePart}\\";
-
-                var s = $"{destFilePath}\\{datePath}";
-                var d = $"{destFilePath}\\{datePath}";
-
+                
                 var src = $"{srcFilePath}";
-                var dest = $"{destFilePath}\\{datePath}{file}";
+                var dest = isLivePhoto ? $"{destFilePath}\\{datePath}{livePhotos}{fileNameWithExt}" : $"{destFilePath}\\{datePath}{fileNameWithExt}";
+
+
+                var destdir =  Path.GetDirectoryName(dest);
 
                 try
                 {
-                    if (!Directory.Exists(s)) Directory.CreateDirectory(d);
+                    if (!Directory.Exists(destdir)) Directory.CreateDirectory(destdir);
                     File.Move(src, dest);
                     var line = $"* File moved from: {src} to {dest}";
                     Console.WriteLine(line); sb.AppendLine(line);
@@ -176,7 +205,7 @@
             return files;
         }
 
-        public void DirectorySearch(string dir, string destFilePath, int fileBatch, IList<string> videoExtentions, SearchOption searchOption)
+        public void DirectorySearch(string dir, string destFilePath, int fileBatch, IList<string> videoExtentions, SearchOption searchOption, string livePhotos = null)
         {
             try
             {
@@ -187,8 +216,8 @@
                 foreach (string d in Directory.GetDirectories(dir))
                 {
                     Console.WriteLine(Path.GetFileName(d));
-                    MoveMovies(d, destFilePath, fileBatch, videoExtentions, SearchOption.TopDirectoryOnly);
-                    DirectorySearch(d, destFilePath, fileBatch, videoExtentions, SearchOption.TopDirectoryOnly);
+                    MoveMovies(d, destFilePath, fileBatch, videoExtentions, SearchOption.TopDirectoryOnly, livePhotos: livePhotos);
+                    DirectorySearch(d, destFilePath, fileBatch, videoExtentions, SearchOption.TopDirectoryOnly, livePhotos: livePhotos);
                 }
             }
             catch (System.Exception ex)
@@ -222,34 +251,46 @@
             }
         }
 
+
+        public static void WriteDetailsToFiles(string srcPath)
+        {
+            if (File.Exists($"{srcPath}\\FileNames.csv")) File.Delete($"{srcPath}\\FileNames.csv");
+
+            var lines = new List<string>();
+            var files = GetFiles(srcPath, SearchOption.AllDirectories, null);
+            var line = $"row,fileNameWithExt,date,datePath,duration,length";
+            lines.Add(line);
+            Console.WriteLine(line);
+
+            var count = 1;
+            foreach (FileInfo fileInfo in files)
+            {
+                var shellFile = ShellFile.FromFilePath(fileInfo.FullName);
+                var fileName = fileInfo.FullName;
+                var date = shellFile.Properties.System.ItemDate.Value.Value;
+                var datePart = (date.Month.ToString().Length == 1) ? "0" + date.Month.ToString() : date.Month.ToString();
+                var datePath = $"{date.Year}\\" + $"{date.Year.ToString() + datePart}\\";
+                var duration = (shellFile.Properties.System.Media.Duration.Value ?? -1 * 0.0001);
+                var length = fileInfo.Length;
+                var row = count++;
+
+                line = $"{row},{fileName},{date},{datePath},{duration},{length}";
+                lines.Add(line);
+                Console.WriteLine(line);
+            }
+
+            File.WriteAllLines($"{srcPath}\\FileNames.csv", lines);
+        }
+
         public static void WriteLinesToFiles(string srcPath)
         {
             if (File.Exists($"{srcPath}\\FileNames.csv")) File.Delete($"{srcPath}\\FileNames.csv");
 
             var lines = new List<string>();
             var files = GetFiles(srcPath, SearchOption.AllDirectories, null);
-            lines.Add($"Artist,Title,Filename,Ext.,FullName");
-
-            //lines.Add($"Artist,Title,Filename, Duplicate");
-            //var group =
-            //    (from fl in files
-            //     select new DummyClass
-            //     {
-            //         Filename = Path.GetFileName(fl.FullName),
-            //         Title = Path.GetFileName(fl.FullName).Split('-')[1].Trim(),
-            //         Artist = Path.GetFileName(fl.FullName).Split('-')[0].Trim()
-            //     }).GroupBy(x => x.Artist).ToList();
-
-            //foreach (var gs in group)
-            //{
-            //    var count = 0;
-            //    foreach (var g in gs)
-            //    {
-            //        count = gs.Where(f => !f.Filename.Equals(g.Filename)).Any(local => local.Title.StartsWith(g.Title)) ? count + 1 : count;
-            //        var dup = $"Duplicate_{count}";
-            //        lines.Add($"{g.Artist},{g.Title},{g.Filename},{dup}");
-            //    }
-            //}
+            var line = $"Artist,Title,Filename,Ext.,FullName";
+            lines.Add(line);
+            Console.WriteLine(line);
 
 
             foreach (FileInfo file in files)
@@ -261,7 +302,10 @@
                 var title = file.Name.Substring(index + 3, file.Name.Length - (index + 3)).Replace($".{ext}", "");
                 var filename = file.Name.Replace(ext, "");
 
-                lines.Add($"{artist},{title},{filename},{ext},{file.FullName}");
+                line = $"{artist},{title},{filename},{ext},{file.FullName}";
+                lines.Add(line);
+
+                Console.WriteLine(line);
 
             }
 
@@ -331,8 +375,9 @@
             else if (fileType == FileType.Videos)
             {
                 var extentions = Constants.VideoExt;
-                pf.DirectorySearch(srcPath, destFilePath, fileBatch, extentions, searchOption);
-                pf.MoveMovies(srcPath, destFilePath, fileBatch, extentions, searchOption);
+                var livePhotos = "LivePhotos\\";
+                pf.DirectorySearch(srcPath, destFilePath, fileBatch, extentions, searchOption, livePhotos);
+                pf.MoveMovies(srcPath, destFilePath, fileBatch, extentions, searchOption, livePhotos);
             }
             else if (fileType == FileType.Music)
             {
