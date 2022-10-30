@@ -49,7 +49,8 @@
                 }
 
                 var line = $"* File Copy Process Completed";
-                Console.WriteLine(line); sb.AppendLine(line);
+                Console.WriteLine(line);
+                sb.AppendLine(line);
 
                 // Delete source files that were copied.
                 //foreach (string f in fileToCopyList)

@@ -29,7 +29,10 @@ namespace Wpf.UI
 
             txtSrcPath.Text = txtSrcPathDesc;
             txtTargetPath.Text = txtTargetPathDesc;
-            txtFileMoviesList.Text = @"G:\Videos\Movies\Movies Kids\MovieToCopyToUsbOrSdCard.txt"; ;
+            txtFileMoviesList.Text = @"F:\Videos\Movies\Movies Kids\MovieToCopyToUsbOrSdCard.txt"; ;
+
+            txtSrcPath.Text = @"F:\Videos\Movies\Movies Kids";
+            txtTargetPath.Text = @"E:\Movies";
         }
 
 
@@ -42,8 +45,8 @@ namespace Wpf.UI
             switch (fileType)
             {
                 case FileType.Videos:
-                    txtSrcPath.Text = @"G:\Videos\Movies\Movies Kids";
-                    txtTargetPath.Text = @"D:\Movies";
+                    txtSrcPath.Text = @"F:\Videos\Movies\Movies Kids";
+                    txtTargetPath.Text = @"E:\Movies";
                     break;
                 default:
                     break;

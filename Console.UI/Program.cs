@@ -1,13 +1,12 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Console.UI
 {
-    class Program
+    public class Program
     {
-
         public static void Main(string[] args)
-        {
-
+        {      
             /**********************************************************/
 
             //CopyMovies.Copy(@"F:\Movies");
@@ -18,11 +17,11 @@ namespace Console.UI
 
             /**********************************************************/
 
-            var srcPath = @"C:\Users\Leo\Desktop\Christina";
-            var destPath = @"C:\Users\Leo\Desktop\Christina2";
-            var fileType = FileType.Videos;
+            var srcPath = @"C:\Users\Leo\Desktop\Photos";
+            var destPath = @"C:\Users\Leo\Desktop\Photos2";
+            var fileType = FileType.Photos;
 
-            //ProcessFiles.ExecuteProcessFiles(srcPath, destPath, fileType, true);
+            ProcessFiles.ExecuteProcessFiles(srcPath, destPath, fileType, true);
             //ProcessFiles.WriteLinesToFiles(srcPath);
 
             /**********************************************************/
@@ -47,13 +46,11 @@ namespace Console.UI
 
             //ProcessFiles.WriteLinesToFiles(srcPath);
 
-            ProcessFiles.RenameFiles(destPath);
+            /****/
+            //ProcessFiles.RenameFiles(destPath);
 
             ProcessFiles.WriteDetailsToFiles(destPath);
 
-
         }
-
-      
     }
 }

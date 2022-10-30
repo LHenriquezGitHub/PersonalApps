@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Console.UI", "Console.UI\Co
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wpf.UI", "Wpf.UI\Wpf.UI.csproj", "{016F5D27-83AC-44EF-98ED-2B6E0F3846EA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApi", "WebApi\WebApi.csproj", "{BC9F7DF3-9CF3-4450-9735-AD78C7EB8C22}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{016F5D27-83AC-44EF-98ED-2B6E0F3846EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{016F5D27-83AC-44EF-98ED-2B6E0F3846EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{016F5D27-83AC-44EF-98ED-2B6E0F3846EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC9F7DF3-9CF3-4450-9735-AD78C7EB8C22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC9F7DF3-9CF3-4450-9735-AD78C7EB8C22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC9F7DF3-9CF3-4450-9735-AD78C7EB8C22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC9F7DF3-9CF3-4450-9735-AD78C7EB8C22}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

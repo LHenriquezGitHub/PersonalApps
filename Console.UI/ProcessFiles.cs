@@ -1,7 +1,6 @@
 ﻿namespace Console.UI
 {
     using Microsoft.WindowsAPICodePack.Shell;
-    using Shell32;
     using System;
     using System.Collections.Generic;
     using System.IO;
