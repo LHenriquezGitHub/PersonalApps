@@ -29,7 +29,7 @@ namespace Console.UI
             if (stack.Length < 1)
                 throw new InvalidOperationException("Stack already empty.");
 
-            var result = stack[stack.Length - 1];
+            object result = stack[stack.Length - 1];
 
             object[] obj = new object[stack.Length];
             stack.CopyTo(obj, 0);

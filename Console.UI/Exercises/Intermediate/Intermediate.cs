@@ -27,7 +27,7 @@ namespace Console.UI.Exercises.Intermediate
             if (!startTime.HasValue)
                 throw new InvalidOperationException("The stopwatch must start before stopping.");
 
-            var duration = DateTime.Now - startTime.Value;
+            TimeSpan duration = DateTime.Now - startTime.Value;
             startTime = null;
             return duration;
         }
@@ -92,7 +92,7 @@ namespace Console.UI.Exercises.Intermediate
 
         public override void OpenConnection()
         {
-            var startConnTime = DateTime.Now;
+            DateTime startConnTime = DateTime.Now;
             if (Timeout < (DateTime.Now - startConnTime))
                 throw new TimeoutException($"{this} timeout");
 
@@ -113,7 +113,7 @@ namespace Console.UI.Exercises.Intermediate
 
         public override void OpenConnection()
         {
-            var startConnTime = DateTime.Now;
+            DateTime startConnTime = DateTime.Now;
             if (Timeout < (DateTime.Now - startConnTime))
                 throw new TimeoutException($"{this} timeout");
 
@@ -209,7 +209,7 @@ namespace Console.UI.Exercises.Intermediate
     {
         public void Run(IWorkFlow workflow)
         {
-            foreach (var w in workflow.GetTasks())
+            foreach (ITask w in workflow.GetTasks())
             {
                 try
                 {

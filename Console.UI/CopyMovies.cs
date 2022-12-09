@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Text;
 
@@ -9,35 +10,45 @@
     {
 
         public static string Copy(string targetPathLetter, string destDirLetter, string fileMoviesList)
-        {            
-            var srcFilenameCollection = GetFilenameCollectionToCopy(fileMoviesList);
-            var sb = new StringBuilder();
+        {
+            string[] srcFilenameCollection = GetFilenameCollectionToCopy(fileMoviesList);
+            StringBuilder sb = new StringBuilder();
 
             try
             {
                 // Copy text files.
-                foreach (var srcFilename in srcFilenameCollection)
+                Stopwatch stopwatch = new Stopwatch();
+                long toSec = 1000;
+                long toMin = toSec * 60;
+                foreach (string srcFilename in srcFilenameCollection)
                 {
-                    var dstFilename = srcFilename.Replace(targetPathLetter, destDirLetter);
+
+                    string dstFilename = srcFilename.Replace(targetPathLetter, destDirLetter);
                     try
                     {
-                        var dstFileExists = File.Exists(dstFilename);
+                        bool dstFileExists = File.Exists(dstFilename);
                         if (dstFileExists)
                         {
-                            var line3 = $"* File Already Exists, NOT Copy From: {GetShortFilename(srcFilename)} To: {GetShortFilename(dstFilename)}";
-                            Console.WriteLine(line3); sb.AppendLine(line3);
+                            string line3 = $"* File Already Exists, NOT Copy From: {GetShortFilename(srcFilename)} To: {GetShortFilename(dstFilename)}";
+                            Console.WriteLine(line3); 
+                            sb.AppendLine(line3);
                         }
                         else
                         {
+                            stopwatch.Start();
                             CreateDirectoryWhenNonExists(dstFilename);
 
                             // Will not overwrite if the destination file already exists.
-
-                            var line1 = $"* File Copying From: {GetShortFilename(srcFilename)} To: {GetShortFilename(dstFilename)}...";
-                            Console.WriteLine(line1); sb.AppendLine(line1);
+                            string line1 = $"* File Copying From: {GetShortFilename(srcFilename)} To: {GetShortFilename(dstFilename)}...";
+                            Console.WriteLine(line1); 
+                            sb.AppendLine(line1);
                             File.Copy(srcFilename, dstFilename, false);
-                            var line2 = $"* File Copied From: {GetShortFilename(srcFilename)} To: {GetShortFilename(dstFilename)}";
-                            Console.WriteLine(line2); sb.AppendLine(line2);
+                            long elapsedSeconds = (stopwatch.ElapsedMilliseconds > 60000) ? stopwatch.ElapsedMilliseconds / toMin : stopwatch.ElapsedMilliseconds / toSec;
+                            string freq = (stopwatch.ElapsedMilliseconds > 60000) ? "(Mins)" : "(Secs)";
+                            string line2 = $"elapsed{freq}: {elapsedSeconds}{freq} - * File Copied From: {GetShortFilename(srcFilename)} To: {GetShortFilename(dstFilename)}";
+                            Console.WriteLine(line2); 
+                            sb.AppendLine(line2); 
+                            stopwatch.Stop();
                         }
                     }
 
@@ -48,7 +59,7 @@
                     }
                 }
 
-                var line = $"* File Copy Process Completed";
+                string line = $"* File Copy Process Completed";
                 Console.WriteLine(line);
                 sb.AppendLine(line);
 
@@ -69,16 +80,16 @@
 
         private static string GetShortFilename(string srcFilename)
         {
-            var prct = (int)(srcFilename.Length * .20M);
-            var s = srcFilename.Substring(0, prct);
-            var s2 = Path.GetFileName(srcFilename);
+            int prct = (int)(srcFilename.Length * .20M);
+            string s = srcFilename.Substring(0, prct);
+            string s2 = Path.GetFileName(srcFilename);
             s = $"{s}...{s2}";
             return s;
         }
 
         private static void CreateDirectoryWhenNonExists(string dstFilename)
         {
-            var dstDirectoryName = Path.GetDirectoryName(dstFilename);
+            string dstDirectoryName = Path.GetDirectoryName(dstFilename);
             if (!Directory.Exists(dstDirectoryName)) Directory.CreateDirectory(dstDirectoryName);
         }
 
@@ -86,9 +97,9 @@
         {
             string[] lines = File.ReadAllLines(fileMoviesList);
             List<string> l = new List<string>();
-            foreach (var line in lines)
+            foreach (string line in lines)
             {
-                var s = line;
+                string s = line;
                 if (line.StartsWith("\""))
                 {
                     s = line.Substring(1);

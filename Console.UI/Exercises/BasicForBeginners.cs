@@ -17,7 +17,7 @@ namespace Console.UI.Exercises
         /// <returns></returns>
         public string IsValidNumber(int number)
         {
-            var result = "Invalid";
+            string result = "Invalid";
 
             if (number >= 1 && number <= 10)
             {
@@ -63,14 +63,14 @@ namespace Console.UI.Exercises
         /// <returns></returns>
         public string GetSpeedCameraMsg(int carSpeed)
         {
-            var speedLimit = 70;
+            int speedLimit = 70;
 
             if (carSpeed < speedLimit)
                 return ("Ok");
             else
             {
                 const int kmPerDemeritPoint = 5;
-                var demeritPoints = (carSpeed - speedLimit) / kmPerDemeritPoint;
+                int demeritPoints = (carSpeed - speedLimit) / kmPerDemeritPoint;
                 if (demeritPoints > 12)
                     return ("License Suspended");
                 else
@@ -86,7 +86,7 @@ namespace Console.UI.Exercises
         /// <returns></returns>
         public int NumbersDivisibleByThree()
         {
-            var count = 0;
+            int count = 0;
             for (int i = 1; i <= 100; i++)
             {
                 if (i % 3 == 0)
@@ -105,8 +105,8 @@ namespace Console.UI.Exercises
         /// <returns></returns>
         public int GetSum(List<int> numbers)
         {
-            var sum = 0;
-            foreach (var num in numbers)
+            int sum = 0;
+            foreach (int num in numbers)
             {
                 sum += num;
             }

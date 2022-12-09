@@ -6,7 +6,7 @@ namespace Console.UI
     public class Program
     {
         public static void Main(string[] args)
-        {      
+        {
             /**********************************************************/
 
             //CopyMovies.Copy(@"F:\Movies");
@@ -17,9 +17,9 @@ namespace Console.UI
 
             /**********************************************************/
 
-            var srcPath = @"C:\Users\Leo\Desktop\Photos";
-            var destPath = @"C:\Users\Leo\Desktop\Photos2";
-            var fileType = FileType.Photos;
+            string srcPath = @"C:\Users\Leo\Desktop\Photos";
+            string destPath = @"C:\Users\Leo\Desktop\20221022_LeoPhotosVideos2";
+            FileType fileType = FileType.Photos;
 
             ProcessFiles.ExecuteProcessFiles(srcPath, destPath, fileType, true);
             //ProcessFiles.WriteLinesToFiles(srcPath);
