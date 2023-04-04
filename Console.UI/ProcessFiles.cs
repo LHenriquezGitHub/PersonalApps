@@ -136,7 +136,6 @@
                 string src = $"{srcFilePath}";
                 string dest = isLivePhoto ? $"{destFilePath}\\{datePath}{livePhotos}{fileNameWithExt}" : $"{destFilePath}\\{datePath}{fileNameWithExt}";
 
-
                 string destdir =  Path.GetDirectoryName(dest);
 
                 try
