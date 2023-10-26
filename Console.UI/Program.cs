@@ -3,10 +3,20 @@ using System.Collections.Generic;
 
 namespace Console.UI
 {
+    using System;
     public class Program
     {
         public static void Main(string[] args)
         {
+            //Console.WriteLine("Think of an animal and I'll guess it!");
+            //Console.WriteLine("Press enter to start.");
+            //Console.ReadLine();
+
+            //string guessedAnimal = GuessAnimal();
+
+            //Console.WriteLine($"I guessed it! It's a {guessedAnimal}.");
+            //Console.ReadLine();
+
             /**********************************************************/
 
             //CopyMovies.Copy(@"F:\Movies");
@@ -17,13 +27,13 @@ namespace Console.UI
 
             /**********************************************************/
 
-            string srcPath = @"C:\Users\Leo\Desktop\Photos";
-            string destPath = @"C:\Users\Leo\Desktop\20221022_LeoPhotosVideos2";
-            FileType fileType = FileType.Photos;
+             string srcPath = @"C:\Users\Leo\Desktop\FastPhoto\";
+             string destPath = @"C:\Users\Leo\Desktop\FastPhoto\";
+             FileType fileType = FileType.Photos;
 
             ProcessFiles.ExecuteProcessFiles(srcPath, destPath, fileType, true);
-            //ProcessFiles.WriteLinesToFiles(srcPath);
-
+            ProcessFiles.WriteLinesToFiles(srcPath);
+            
             /**********************************************************/
 
             //Delete Empty Folders
@@ -49,7 +59,7 @@ namespace Console.UI
             /****/
             //ProcessFiles.RenameFiles(destPath);
 
-            ProcessFiles.WriteDetailsToFiles(destPath);
+            ///////////////////////ProcessFiles.WriteDetailsToFiles(destPath);
 
         }
     }

@@ -3,9 +3,11 @@
     using Microsoft.WindowsAPICodePack.Shell;
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.IO;
     using System.Linq;
     using System.Text;
+    using System.Text.RegularExpressions;
 
     public class ProcessFiles
     {
@@ -92,6 +94,16 @@
             List<FileInfo> files = ProcessFiles.GetFiles(destPath, SearchOption.AllDirectories, null);
             foreach (FileInfo file in files)
             {
+                //if (file.Extension.Equals(".jpeg", StringComparison.CurrentCultureIgnoreCase))
+                //{
+                //    string renameToJpg = file.FullName.Replace(".jpeg", ".jpg").Replace(".JPEG", ".JPG");
+                //    File.Move(file.FullName, renameToJpg);
+
+                //    string line = $"* File rename from: {file.FullName} to {renameToJpg}";
+                //    Console.WriteLine(line);
+
+                //}
+                //else 
                 if (file.FullName.Contains("_Duplicate"))
                 {
                     string removeDupStr = file.FullName.Replace("_Duplicate", "");
@@ -99,9 +111,25 @@
 
                     string line = $"* File rename from: {file.FullName} to {removeDupStr}";
                     Console.WriteLine(line);
-
                 }
             }
+        }
+
+        public static DateTime ExtractDateFromFileName(string fileName)
+        {
+            string pattern = @"\d{8}";
+            Match match = Regex.Match(fileName, pattern);
+
+            if (match.Success)
+            {
+                string dateText = match.Value;
+                if (DateTime.TryParseExact(dateText, "yyyyMMdd", null, DateTimeStyles.None, out DateTime parsedDate))
+                {
+                    return parsedDate;
+                }
+            }
+
+            return DateTime.MinValue;
         }
 
         public string MoveFiles(string srcPath, string destFilePath, int fileBatch, SearchOption searchOption, IList<string> fileExt = null, bool removeDatePart = false, string livePhotos = null)
@@ -117,7 +145,8 @@
                 string fileName = fileNameWithExt.Split(".".ToCharArray()).First();
                 string localFileExt = fileNameWithExt.Split(".".ToCharArray()).Last();
                 ShellFile shellFile = ShellFile.FromFilePath(fileInfo.FullName);
-                DateTime date = shellFile.Properties.System.ItemDate.Value.Value;
+                DateTime extractedDate = ExtractDateFromFileName(fileName);
+                DateTime date = (extractedDate != DateTime.MinValue) ? extractedDate : shellFile.Properties.System.ItemDate.Value.Value;             
 
                 bool isLivePhoto = false;
                 if (!string.IsNullOrEmpty(livePhotos))
